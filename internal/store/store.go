@@ -320,7 +320,9 @@ func (s *Store) ListTempReadings(containerID string) []domain.TempReading {
 func (s *Store) CarryOverTempReadings(fromContainerID, toContainerID string) int {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	carried := s.tempReadings[fromContainerID]
+	src := s.tempReadings[fromContainerID]
+	carried := make([]domain.TempReading, len(src))
+	copy(carried, src)
 	for i := range carried {
 		carried[i].ContainerID = toContainerID
 	}
