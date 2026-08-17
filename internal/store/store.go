@@ -320,8 +320,13 @@ func (s *Store) ListTempReadings(containerID string) []domain.TempReading {
 func (s *Store) CarryOverTempReadings(fromContainerID, toContainerID string) int {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	carried := s.tempReadings[fromContainerID]
-	for i := range carried {
+	// Copy the failed reefer's readings onto the backup container, re-stamping
+	// only the copies with the backup container ID. The failed container's own
+	// records must stay intact so the pre-failure curve is preserved for claims.
+	src := s.tempReadings[fromContainerID]
+	carried := make([]domain.TempReading, len(src))
+	for i := range src {
+		carried[i] = src[i]
 		carried[i].ContainerID = toContainerID
 	}
 	s.tempReadings[toContainerID] = append(s.tempReadings[toContainerID], carried...)
